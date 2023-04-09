@@ -1,5 +1,5 @@
 [package]
-name = "cubechess-ws-service"
+name = "rooklift-ws-service"
 version = "0.0.1"
 authors = ["Zak Farmer <zak@3sidedcube.org>"]
 edition = "2021"

@@ -5,7 +5,6 @@ use crate::{
     ws, Client, Clients, Result, pubsub,
 };
 
-use redis::{aio::Connection};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use uuid::Uuid;
@@ -79,8 +78,10 @@ pub async fn broadcast_handler(body: Event, clients: Clients) -> Result<impl Rep
 
     let mut con: redis::aio::Connection = get_con(client).await.unwrap();
 
+    let msg_json: Value = serde_json::from_str(&body.message).unwrap();
+
     let msg: pubsub::Message = pubsub::Message::new(pubsub::Payload {
-        fen: body.message,
+        fen: msg_json["fen"].to_string().replace("\"", ""), // TODO: Make this less hacky
         game_id: body.game_id,
     });
 

@@ -76,7 +76,7 @@ async fn main() {
         .or(broadcast)
         .with(cors);
 
-    println!("[CubeChess WS] Server started on port {}", port);
+    println!("[Rooklift WS] Server started on port {}", port);
 
     warp::serve(routes).run(([127, 0, 0, 1], port)).await;
 }

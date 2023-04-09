@@ -1,5 +1,5 @@
 use redis::{aio::Connection, AsyncCommands};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -35,8 +35,6 @@ pub async fn publish_message(
     message: Message,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let json: String = serde_json::to_string(&message)?;
-
-    println!("Publishing message \"{}\" to channel \"{}\"", json, message.channel);
 
     con.publish(message.channel, json).await?;
     Ok(())
