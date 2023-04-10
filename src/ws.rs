@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use crate::Client;
 use futures::{FutureExt, StreamExt};
-use serde::Deserialize;
+
 use tokio::sync::{mpsc, Mutex};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use warp::ws::{Message, WebSocket};

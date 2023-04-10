@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::convert::Infallible;
 use std::sync::Arc;
-use tokio::sync::{mpsc, Mutex, RwLock};
+use tokio::sync::{mpsc, Mutex};
 use warp::{ws::Message, Filter, Rejection};
 
 use crate::ws::Clients;

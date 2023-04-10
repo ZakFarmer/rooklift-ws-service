@@ -86,7 +86,7 @@ pub async fn broadcast_handler(body: Event, clients: Clients) -> Result<impl Rep
 
     match result {
         Ok(_) => Ok(StatusCode::OK),
-        Err(e) => Ok(StatusCode::BAD_REQUEST),
+        Err(_e) => Ok(StatusCode::BAD_REQUEST),
     }
 }
 
