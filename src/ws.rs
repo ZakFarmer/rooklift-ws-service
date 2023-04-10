@@ -3,18 +3,12 @@ use std::{collections::HashMap, sync::Arc};
 use crate::Client;
 use futures::{FutureExt, StreamExt};
 use serde::Deserialize;
-use serde_json::from_str;
 use tokio::sync::{mpsc, Mutex};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use warp::ws::{Message, WebSocket};
 
 // Define a type for the clients hashmap (using Arc and Mutex for thread safety)
 pub type Clients = Arc<Mutex<HashMap<String, Client>>>;
-
-#[derive(Deserialize, Debug)]
-pub struct GamesRequest {
-    game_id: usize,
-}
 
 pub async fn client_connection(ws: WebSocket, id: String, clients: Clients, mut client: Client) {
     let (client_ws_sender, mut client_ws_rcv) = ws.split();
@@ -55,19 +49,18 @@ async fn client_msg(id: &str, msg: Message, clients: &Clients) {
     };
 
     if message == "ping" || message == "ping\n" {
-        return;
-    }
+        let locked = clients.lock().await;
 
-    let games_req: GamesRequest = match from_str(message) {
-        Ok(v) => v,
-        Err(e) => {
-            eprintln!("Error while parsing message to games request: {}", e);
-            return;
+        match locked.get(id) {
+            Some(v) => {
+                if let Some(sender) = &v.sender {
+                    println!("Sent \"pong\" to client {}", id);
+                    let _ = sender.send(Ok(Message::text("pong")));
+                }
+            }
+            None => return,
         }
-    };
 
-    let mut locked = clients.lock().await;
-    if let Some(v) = locked.get_mut(id) {
-        v.game_id = games_req.game_id;
+        return;
     }
 }
