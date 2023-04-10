@@ -1,9 +1,6 @@
 use std::env;
 
-use crate::{
-    redis::{get_con, set_str},
-    ws, Client, Clients, Result, pubsub,
-};
+use crate::{pubsub, redis::get_con, ws, Client, Clients, Result};
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -57,7 +54,7 @@ pub struct Event {
 pub async fn broadcast_handler(body: Event, clients: Clients) -> Result<impl Reply> {
     // Broadcast to every client that isn't the sender in the same game
     clients
-        .read()
+        .lock()
         .await
         .iter()
         .filter(|(_, client)| match body.user_id {
@@ -106,7 +103,7 @@ pub async fn register_handler(body: RegisterRequest, clients: Clients) -> Result
 }
 
 async fn register_client(id: String, user_id: usize, game_id: usize, clients: Clients) {
-    clients.write().await.insert(
+    clients.lock().await.insert(
         id,
         Client {
             user_id,
@@ -117,12 +114,12 @@ async fn register_client(id: String, user_id: usize, game_id: usize, clients: Cl
 }
 
 pub async fn unregister_handler(id: String, clients: Clients) -> Result<impl Reply> {
-    clients.write().await.remove(&id);
+    clients.lock().await.remove(&id);
     Ok(StatusCode::OK)
 }
 
 pub async fn ws_handler(ws: warp::ws::Ws, id: String, clients: Clients) -> Result<impl Reply> {
-    let client = clients.read().await.get(&id).cloned();
+    let client = clients.lock().await.get(&id).cloned();
     match client {
         Some(c) => Ok(ws.on_upgrade(move |socket| ws::client_connection(socket, id, clients, c))),
         None => Err(warp::reject::not_found()),

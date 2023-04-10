@@ -1,8 +1,10 @@
 use std::collections::HashMap;
 use std::convert::Infallible;
 use std::sync::Arc;
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::{mpsc, Mutex, RwLock};
 use warp::{ws::Message, Filter, Rejection};
+
+use crate::ws::Clients;
 
 mod handler;
 mod pubsub;
@@ -10,9 +12,6 @@ mod redis;
 mod ws;
 
 type Result<T> = std::result::Result<T, Rejection>;
-
-// Define a type for the clients hashmap (using Arc and RwLock for thread safety)
-type Clients = Arc<RwLock<HashMap<String, Client>>>;
 
 #[derive(Debug, Clone)]
 pub struct Client {
@@ -38,7 +37,7 @@ async fn main() {
         .unwrap();
 
     // Initialise empty hashmap for clients
-    let clients: Clients = Arc::new(RwLock::new(HashMap::new()));
+    let clients: Clients = Arc::new(Mutex::new(HashMap::new()));
 
     // Route for healthcheck (/health)
     let health_route = warp::path!("health").and_then(handler::health_handler);

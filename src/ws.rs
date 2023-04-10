@@ -1,10 +1,15 @@
-use crate::{Client, Clients};
+use std::{collections::HashMap, sync::Arc};
+
+use crate::Client;
 use futures::{FutureExt, StreamExt};
 use serde::Deserialize;
 use serde_json::from_str;
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, Mutex};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use warp::ws::{Message, WebSocket};
+
+// Define a type for the clients hashmap (using Arc and Mutex for thread safety)
+pub type Clients = Arc<Mutex<HashMap<String, Client>>>;
 
 #[derive(Deserialize, Debug)]
 pub struct GamesRequest {
@@ -23,7 +28,7 @@ pub async fn client_connection(ws: WebSocket, id: String, clients: Clients, mut 
     }));
 
     client.sender = Some(client_sender);
-    clients.write().await.insert(id.clone(), client);
+    clients.lock().await.insert(id.clone(), client);
 
     println!("{} connected", id);
 
@@ -38,7 +43,7 @@ pub async fn client_connection(ws: WebSocket, id: String, clients: Clients, mut 
         client_msg(&id, msg, &clients).await;
     }
 
-    clients.write().await.remove(&id);
+    clients.lock().await.remove(&id);
     println!("{} disconnected", id);
 }
 
@@ -61,7 +66,7 @@ async fn client_msg(id: &str, msg: Message, clients: &Clients) {
         }
     };
 
-    let mut locked = clients.write().await;
+    let mut locked = clients.lock().await;
     if let Some(v) = locked.get_mut(id) {
         v.game_id = games_req.game_id;
     }
