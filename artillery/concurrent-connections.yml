@@ -1,0 +1,17 @@
+config:
+  target: "{{ $env.TARGET }}"
+  phases:
+    - duration: 300
+      arrivalRate: 10
+  processor: "./js/ws.js"
+  ensure:
+    p95: 500
+    maxErrorRate: 1
+
+scenarios:
+  - name: "WS load test"
+    engine: ws
+    flow:
+      - connect:
+          function: "connect"
+      - think: 5
